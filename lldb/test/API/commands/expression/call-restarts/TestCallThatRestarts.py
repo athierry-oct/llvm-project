@@ -18,6 +18,8 @@ class ExprCommandThatRestartsTestCase(TestBase):
 
         self.main_source = "lotta-signals.c"
         self.main_source_spec = lldb.SBFileSpec(self.main_source)
+        # Enable process and state event logging
+        self.runCmd("log enable lldb process state")
 
     @skipIfDarwin  # llvm.org/pr19246: intermittent failure
     @skipIfWindows  # Test relies on signals, unsupported on Windows
@@ -122,6 +124,11 @@ class ExprCommandThatRestartsTestCase(TestBase):
         self.runCmd("process handle SIGCHLD -s 1 -p 1 -n 1")
 
         value = frame.EvaluateExpression("call_me (%d)" % (num_sigchld), options)
+
+        # Print process state and stop reason after the call
+        print("Process state after EvaluateExpression:", process.GetState())
+        print("Process stop reason after EvaluateExpression:", self.thread.GetStopReason())
+
         self.assertTrue(value.IsValid())
         self.assertFalse(value.GetError().Success())
 

@@ -16,6 +16,7 @@ class DAPTestCaseBase(TestBase):
     # timeout by a factor of 10 if ASAN is enabled.
     DEFAULT_TIMEOUT = 10 * (10 if ("ASAN_OPTIONS" in os.environ) else 1)
     NO_DEBUG_INFO_TESTCASE = True
+    lldbLogChannels = ["event process target platform"]
 
     def create_debug_adapter(
         self,
@@ -27,10 +28,21 @@ class DAPTestCaseBase(TestBase):
             is_exe(self.lldbDAPExec), "lldb-dap must exist and be executable"
         )
         log_file_path = self.getBuildArtifact("dap.txt")
+
+        # Enable lldb logs to aid in debugging failures.
+        lldb_log = self.getBuildArtifact("lldb.log")
+
+        init_commands = self.setUpCommands()
+        init_commands.append(
+            "log enable -Tpn -f {} lldb {}".format(
+                lldb_log, " ".join(self.lldbLogChannels)
+            )
+        )
+
         self.dap_server = dap_server.DebugAdapterServer(
             executable=self.lldbDAPExec,
             connection=connection,
-            init_commands=self.setUpCommands(),
+            init_commands=init_commands,
             log_file=log_file_path,
             env=lldbDAPEnv,
         )

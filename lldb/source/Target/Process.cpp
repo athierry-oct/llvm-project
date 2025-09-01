@@ -1302,6 +1302,7 @@ void Process::SetPublicState(StateType new_state, bool restarted) {
   }
 
   Log *log(GetLog(LLDBLog::State | LLDBLog::Process));
+  LLDB_LOGF(log, "Set public state to %s", StateAsCString(new_state));
   LLDB_LOGF(log, "(plugin = %s, state = %s, restarted = %i)",
            GetPluginName().data(), StateAsCString(new_state), restarted);
   const StateType old_state = m_public_state.GetValue();
@@ -4298,6 +4299,8 @@ bool Process::ProcessEventData::ForwardEventToPendingListeners(
 }
 
 void Process::ProcessEventData::DoOnRemoval(Event *event_ptr) {
+  Log *log(GetLog(LLDBLog::Step | LLDBLog::Process));
+  LLDB_LOGF(log, "DoOnRemoval called for event %p", static_cast<void *>(event_ptr));
   // We only have work to do for state changed events:
   if (event_ptr->GetType() != Process::eBroadcastBitStateChanged)
     return;
@@ -5233,6 +5236,7 @@ Process::RunThreadPlan(ExecutionContext &exe_ctx,
           }
         }
 
+        LLDB_LOGF(log, "Getting event from run thread plan hijacker");
         got_event =
             listener_sp->GetEvent(event_sp, GetUtilityExpressionTimeout());
         if (!got_event) {
